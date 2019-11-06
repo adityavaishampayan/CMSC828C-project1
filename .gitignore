@@ -106,3 +106,4 @@ venv.bak/
 #folders
 project/
 fashion-mnist/
+hidden/
