@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
 # importing required libraries
-from matplotlib import pyplot as plt
 from utils import mnist_reader
 from future.utils import iteritems
-from datetime import datetime
-from scipy.stats import norm
 from scipy.stats import multivariate_normal as mvn
 import numpy as np
+import time
 import matplotlib
+from matplotlib import pyplot as plt
+
+
 
 class Dataset(object):
 
@@ -22,7 +23,8 @@ class Dataset(object):
         :param data_type: train or test data
         :return: data and labels
         """
-        train_data, test_data = mnist_reader.load_mnist(folder_path, kind=data_type)
+        train_data, test_data = mnist_reader.load_mnist(folder_path, 
+                                                        kind=data_type)
         return train_data, test_data
 
     def normalize(self, data_vector):
@@ -34,15 +36,6 @@ class Dataset(object):
         data_vector.astype('float32')
         normalised_data = (data_vector / 255)
         return normalised_data
-
-
-data_set = Dataset()
-x_train, y_train = data_set.load('data/fashion', 'train')
-x_test, y_test = data_set.load('data/fashion', 't10k')
-
-x_train_norm = data_set.normalize(x_train)
-x_test_norm = data_set.normalize(x_test)
-
 
 class Bayes(object):
 
@@ -77,7 +70,8 @@ class Bayes(object):
         :return: None
         """
         for category in labels:
-            self.priors[category] = {len(labels[labels == category])/len(labels)}
+            self.priors[category] = {len(labels[labels == category])
+            /len(labels)}
         return 0
 
     def fit(self, data, y):
@@ -95,7 +89,8 @@ class Bayes(object):
             current_data = data[y == category]
             self.gaussian[category] = {
                 'mean': current_data.mean(axis=0),
-                'cov': np.cov(current_data.T) + np.eye(feature_length) * smoothing_factor
+                'cov': np.cov(current_data.T) + np.eye(feature_length) 
+                * smoothing_factor
             }
             self.priors[category] = float(len(y[y == category]))/len(y)
         return 0
@@ -112,7 +107,8 @@ class Bayes(object):
 
         for category, g in iteritems(self.gaussian):
             mean, covariance = g['mean'], g['cov']
-            p[:,category] = mvn.logpdf(data, mean = mean, cov=covariance) + np.log(self.priors[category])
+            p[:,category] = mvn.logpdf(data, mean = mean, cov=covariance) 
+            + np.log(self.priors[category])
 
         return np.argmax(p, axis=1)
 
@@ -126,21 +122,43 @@ class Bayes(object):
         prediction = self.predict(data)
         return np.mean(prediction == labels)
 
+def prep_data():
+    data_set = Dataset()
+    x_train, y_train = data_set.load('data/fashion', 'train')
+    x_test, y_test = data_set.load('data/fashion', 't10k')
+    
+    x_train_norm = data_set.normalize(x_train)
+    x_test_norm = data_set.normalize(x_test)
+    
+    return x_train_norm, x_test_norm, y_train, y_test
 
-if __name__ == '__main__':
 
+def main():
+    
+    x_train, x_test, y_train_data, y_test_data = prep_data()
+    
     model = Bayes()
-    t0 = datetime.now()
-    model.fit(x_train_norm, y_train)
-    print("Training time:", (datetime.now() - t0))
+    start = time.time()
+    model.fit(x_train, y_train_data)
+    print("Time required for training:", float(time.time() - start))
 
-    t0 = datetime.now()
-    print("Train accuracy:", model.accuracy(x_train_norm, y_train))
-    print("Time to compute train accuracy:", (datetime.now() - t0), "Train size:", len(y_train))
+    start = time.time()
+    print("Training accuracy:", model.accuracy(x_train, y_train_data))
+    print("Time required for computing train accuracy:", 
+          float(time.time() - start),
+          "Training data size:", len(y_train_data))
 
-    t0 = datetime.now()
-    print("Test accuracy:", model.accuracy(x_test_norm, y_test))
-    print("Time to compute test accuracy:", (datetime.now() - t0), "Test size:", len(y_test))
+    start = time.time()
+    print("Testing accuracy:", model.accuracy(x_test, y_test_data))
+    print("Time required for computing test accuracy:", 
+          float(time.time() - start), 
+          "Testing dataset size:", len(y_test_data))
+    
+    
+    
+if __name__ == '__main__':
+    main()
+    
 
 
 
