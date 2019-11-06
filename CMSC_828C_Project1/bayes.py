@@ -9,8 +9,6 @@ import time
 import matplotlib
 from matplotlib import pyplot as plt
 
-
-
 class Dataset(object):
 
     def __init__(self):

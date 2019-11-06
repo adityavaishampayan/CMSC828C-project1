@@ -130,34 +130,38 @@ def prep_data():
     x_train_norm = data_set.normalize(x_train)
     x_test_norm = data_set.normalize(x_test)
     
-    sc = StandardScaler()
-    x_train_scaled = sc.fit_transform(x_train_norm)
-    x_test_scaled = sc.transform(x_test_norm)
+    return x_train_norm, x_test_norm, y_train, y_test
+
+def run_LDA(train_data, test_data, y_train, y_test):
     
+    sc = StandardScaler()
+    x_train_scaled = sc.fit_transform(train_data)
+    x_test_scaled = sc.transform(test_data)
     lda = LDA(n_components=1)
     x_train_LDA = lda.fit_transform(x_train_scaled, y_train)
     x_test_LDA = lda.transform(x_test_scaled)
 
-    return x_train_LDA, x_test_LDA, y_train, y_test
+    return x_train_LDA, x_test_LDA
 
 
 def main():
     
     x_train, x_test, y_train_data, y_test_data = prep_data()
+    x_LDA_train, x_LDA_test = run_LDA(x_train, x_test, y_train_data, y_test_data)
     
     model = Bayes()
     start = time.time()
-    model.fit(x_train, y_train_data)
+    model.fit(x_LDA_train, y_train_data)
     print("Time required for training:", float(time.time() - start))
 
     start = time.time()
-    print("Training accuracy:", model.accuracy(x_train, y_train_data))
+    print("Training accuracy:", model.accuracy(x_LDA_train, y_train_data))
     print("Time required for computing train accuracy:", 
           float(time.time() - start),
           "Training data size:", len(y_train_data))
 
     start = time.time()
-    print("Testing accuracy:", model.accuracy(x_test, y_test_data))
+    print("Testing accuracy:", model.accuracy(x_LDA_test, y_test_data))
     print("Time required for computing test accuracy:", 
           float(time.time() - start), 
           "Testing dataset size:", len(y_test_data))
