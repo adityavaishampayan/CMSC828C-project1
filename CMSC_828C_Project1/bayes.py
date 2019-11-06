@@ -6,8 +6,7 @@ from future.utils import iteritems
 from scipy.stats import multivariate_normal as mvn
 import numpy as np
 import time
-import matplotlib
-from matplotlib import pyplot as plt
+
 
 class Dataset(object):
 
@@ -34,6 +33,7 @@ class Dataset(object):
         data_vector.astype('float32')
         normalised_data = (data_vector / 255)
         return normalised_data
+
 
 class Bayes(object):
 
@@ -68,8 +68,7 @@ class Bayes(object):
         :return: None
         """
         for category in labels:
-            self.priors[category] = {len(labels[labels == category])
-            /len(labels)}
+            self.priors[category] = {len(labels[labels == category]) / len(labels)}
         return 0
 
     def fit(self, data, y):
@@ -105,8 +104,7 @@ class Bayes(object):
 
         for category, g in iteritems(self.gaussian):
             mean, covariance = g['mean'], g['cov']
-            p[:,category] = mvn.logpdf(data, mean = mean, cov=covariance) 
-            + np.log(self.priors[category])
+            p[:,category] = mvn.logpdf(data, mean = mean, cov=covariance) + np.log(self.priors[category])
 
         return np.argmax(p, axis=1)
 
@@ -120,7 +118,12 @@ class Bayes(object):
         prediction = self.predict(data)
         return np.mean(prediction == labels)
 
+
 def prep_data():
+    """
+    This function preps the dataset for further application
+    :return: normalised test and train data
+    """
     data_set = Dataset()
     x_train, y_train = data_set.load('data/fashion', 'train')
     x_test, y_test = data_set.load('data/fashion', 't10k')
@@ -150,10 +153,9 @@ def main():
     print("Testing accuracy:", model.accuracy(x_test, y_test_data))
     print("Time required for computing test accuracy:", 
           float(time.time() - start), 
-          "Testing dataset size:", len(y_test_data))
-    
-    
-    
+          "Testing data set size:", len(y_test_data))
+
+
 if __name__ == '__main__':
     main()
     

@@ -2,14 +2,13 @@
 
 # importing required libraries
 import numpy as np
-import matplotlib
 import time
-from matplotlib import pyplot as plt
 from utils import mnist_reader
 from future.utils import iteritems
 from scipy.stats import multivariate_normal as mvn
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+
 
 class Dataset(object):
 
@@ -36,6 +35,7 @@ class Dataset(object):
         data_vector.astype('float32')
         normalised_data = (data_vector / 255)
         return normalised_data
+
 
 class Bayes(object):
 
@@ -122,7 +122,12 @@ class Bayes(object):
         prediction = self.predict(data)
         return np.mean(prediction == labels)
 
+
 def prep_data():
+    """
+    This function preps the dataset for further application
+    :return: normalised test and train data
+    """
     data_set = Dataset()
     x_train, y_train = data_set.load('data/fashion', 'train')
     x_test, y_test = data_set.load('data/fashion', 't10k')
@@ -132,8 +137,16 @@ def prep_data():
     
     return x_train_norm, x_test_norm, y_train, y_test
 
+
 def run_LDA(train_data, test_data, y_train, y_test):
-    
+    """
+    This function performs LDA on dataset and reduces its dimensionality
+    :param train_data: train data for LDA dimensionality reduction
+    :param test_data: test data for LDA dimensionality reduction
+    :param y_train: training data labels
+    :param y_test: testing data labels
+    :return: train and test data with reduced dimensionality
+    """
     sc = StandardScaler()
     x_train_scaled = sc.fit_transform(train_data)
     x_test_scaled = sc.transform(test_data)

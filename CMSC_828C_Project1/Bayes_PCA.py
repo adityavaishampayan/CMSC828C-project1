@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 # importing required libraries
-from matplotlib import pyplot as plt
 from utils import mnist_reader
 from future.utils import iteritems
-from datetime import datetime
 from scipy.stats import multivariate_normal as mvn
 from sklearn.decomposition import PCA
 from sklearn.decomposition import IncrementalPCA
 import numpy as np
 import time
+
 
 class Dataset(object):
 
@@ -108,8 +107,7 @@ class Bayes(object):
 
         for category, g in iteritems(self.gaussian):
             mean, covariance = g['mean'], g['cov']
-            p[:, category] = mvn.logpdf(data, mean=mean, cov=covariance) 
-            + np.log(self.priors[category])
+            p[:, category] = mvn.logpdf(data, mean=mean, cov=covariance)  + np.log(self.priors[category])
 
         return np.argmax(p, axis=1)
 
@@ -123,7 +121,12 @@ class Bayes(object):
         prediction = self.predict(data)
         return np.mean(prediction == labels)
 
+
 def prep_data():
+    """
+    This function preps the data set for further application
+    :return: normalised test and train data
+    """
     data_set = Dataset()
     x_train, y_train = data_set.load('data/fashion', 'train')
     x_test, y_test = data_set.load('data/fashion', 't10k')
@@ -133,7 +136,14 @@ def prep_data():
     
     return x_train_norm, x_test_norm, y_train, y_test
 
+
 def run_PCA(train_data, test_data):
+    """
+    This function performs PCA on data set and reduces its dimensionality
+    :param train_data: train data for PCA dimensionality reduction
+    :param test_data: test data for PCA dimensionality reduction
+    :return: train and test data after applying PCA
+    """
     pca = PCA()
     pca.fit(train_data)
     cumsum = np.cumsum(pca.explained_variance_ratio_)
@@ -144,8 +154,15 @@ def run_PCA(train_data, test_data):
     x_test_pca = pca.fit_transform(test_data)
     
     return x_train_pca, x_test_pca 
-    
+
+
 def run_incremental_PCA(train_data, test_data, n_batches = 50):
+    """
+    :param train_data: train_data: train data for incremental PCA dimensionality reduction
+    :param test_data: test data for incremental PCA dimensionality reduction
+    :param n_batches: default parameter
+    :return: train and test data after applying incremental PCA
+    """
  
     inc_pca = IncrementalPCA(n_components=187)
     for X_batch in np.array_split(train_data, n_batches):
