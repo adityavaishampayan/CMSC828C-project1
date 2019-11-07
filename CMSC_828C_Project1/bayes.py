@@ -9,7 +9,6 @@ import time
 
 
 class Dataset(object):
-
     def __init__(self):
         pass
 
@@ -20,8 +19,7 @@ class Dataset(object):
         :param data_type: train or test data
         :return: data and labels
         """
-        train_data, test_data = mnist_reader.load_mnist(folder_path, 
-                                                        kind=data_type)
+        train_data, test_data = mnist_reader.load_mnist(folder_path, kind=data_type)
         return train_data, test_data
 
     def normalize(self, data_vector):
@@ -30,13 +28,12 @@ class Dataset(object):
         :param data_vector: data to be normalised
         :return: normalised data
         """
-        data_vector.astype('float32')
-        normalised_data = (data_vector / 255)
+        data_vector.astype("float32")
+        normalised_data = data_vector / 255
         return normalised_data
 
 
 class Bayes(object):
-
     def __init__(self):
         self.priors = dict()
         self.gaussian = dict()
@@ -80,16 +77,16 @@ class Bayes(object):
         """
         smoothing_factor = 1e-2
         samples, feature_length = data.shape
-        
+
         labels = set(y)
         for category in labels:
             current_data = data[y == category]
             self.gaussian[category] = {
-                'mean': current_data.mean(axis=0),
-                'cov': np.cov(current_data.T) + np.eye(feature_length) 
-                * smoothing_factor
+                "mean": current_data.mean(axis=0),
+                "cov": np.cov(current_data.T)
+                + np.eye(feature_length) * smoothing_factor,
             }
-            self.priors[category] = float(len(y[y == category]))/len(y)
+            self.priors[category] = float(len(y[y == category])) / len(y)
         return 0
 
     def predict(self, data):
@@ -103,8 +100,10 @@ class Bayes(object):
         p = np.zeros((samples, k))
 
         for category, g in iteritems(self.gaussian):
-            mean, covariance = g['mean'], g['cov']
-            p[:,category] = mvn.logpdf(data, mean = mean, cov=covariance) + np.log(self.priors[category])
+            mean, covariance = g["mean"], g["cov"]
+            p[:, category] = mvn.logpdf(data, mean=mean, cov=covariance) + np.log(
+                self.priors[category]
+            )
 
         return np.argmax(p, axis=1)
 
@@ -125,19 +124,19 @@ def prep_data():
     :return: normalised test and train data
     """
     data_set = Dataset()
-    x_train, y_train = data_set.load('data/fashion', 'train')
-    x_test, y_test = data_set.load('data/fashion', 't10k')
-    
+    x_train, y_train = data_set.load("data/fashion", "train")
+    x_test, y_test = data_set.load("data/fashion", "t10k")
+
     x_train_norm = data_set.normalize(x_train)
     x_test_norm = data_set.normalize(x_test)
-    
+
     return x_train_norm, x_test_norm, y_train, y_test
 
 
 def main():
-    
+
     x_train, x_test, y_train_data, y_test_data = prep_data()
-    
+
     model = Bayes()
     start = time.time()
     model.fit(x_train, y_train_data)
@@ -145,21 +144,25 @@ def main():
 
     start = time.time()
     print("Training accuracy:", model.accuracy(x_train, y_train_data))
-    print("Time required for computing train accuracy:", 
-          float(time.time() - start),
-          "Training data size:", len(y_train_data))
+    print(
+        "Time required for computing train accuracy:",
+        float(time.time() - start),
+        "Training data size:",
+        len(y_train_data),
+    )
 
     start = time.time()
     print("Testing accuracy:", model.accuracy(x_test, y_test_data))
-    print("Time required for computing test accuracy:", 
-          float(time.time() - start), 
-          "Testing data set size:", len(y_test_data))
+    print(
+        "Time required for computing test accuracy:",
+        float(time.time() - start),
+        "Testing data set size:",
+        len(y_test_data),
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-    
-
 
 
 #
