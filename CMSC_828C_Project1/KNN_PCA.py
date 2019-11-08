@@ -1,13 +1,24 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Nov  7 15:23:24 2019
+
+@author: Aditya's HP Omen 15
+"""
+
 #!/usr/bin/env python3
 
 # importing required libraries
 from utils import mnist_reader
-Sfrom sklearn.decomposition import PCA
+from sklearn.decomposition import PCA
 from sklearn.decomposition import IncrementalPCA
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import time
 from sklearn import metrics
+from matplotlib import pyplot as plt
+import matplotlib as mpl
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import confusion_matrix
 
 
 class Dataset(object):
@@ -34,7 +45,6 @@ class Dataset(object):
         normalised_data = data_vector / 255
         return normalised_data
 
-
 def prep_data():
     """
     This function preps the data set for further application
@@ -43,6 +53,9 @@ def prep_data():
     data_set = Dataset()
     x_train, y_train = data_set.load("data/fashion", "train")
     x_test, y_test = data_set.load("data/fashion", "t10k")
+    
+    shuffle_index = np.random.permutation(60000)
+    x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
 
     x_train_norm = data_set.normalize(x_train)
     x_test_norm = data_set.normalize(x_test)
@@ -88,36 +101,119 @@ def run_incremental_PCA(train_data, test_data, n_batches=50):
 
     return x_train_pca_inc, x_test_pca_inc
 
+def plot_digits(instances, images_per_row=10, **options):
+    size = 28
+    images_per_row = min(len(instances), images_per_row)
+    images = [instance.reshape(size,size) for instance in instances]
+    n_rows = (len(instances) - 1) // images_per_row + 1
+    row_images = []
+    n_empty = n_rows * images_per_row - len(instances)
+    images.append(np.zeros((size, size * n_empty)))
+    for row in range(n_rows):
+        rimages = images[row * images_per_row : (row + 1) * images_per_row]
+        row_images.append(np.concatenate(rimages, axis=1))
+    image = np.concatenate(row_images, axis=0)
+    plt.imshow(image, cmap = mpl.cm.binary, **options)
+    plt.axis("off")
 
-if __name__ == "__main__":
+def cf_matrix(model, X, Y):
+    #y_train_pred = cross_val_predict(knn, x_train_pca, y_train_data, cv=3)
+    y_train_pred = cross_val_predict(model, X, Y, cv=3)
+    conf_mx =confusion_matrix(Y, y_train_pred)
+    print(conf_mx)
+    plt.matshow(conf_mx, cmap=plt.cm.gray)
+    plt.show()
+    return conf_mx, y_train_pred
 
+def cf_matrix_norm(cfm):
+    row_sums = cfm.sum(axis=1, keepdims=True)
+    norm_conf_mx = cfm / row_sums
+    np.fill_diagonal(norm_conf_mx, 0)
+    return norm_conf_mx
+    
+def plot_images(a,b,x_train, y_train, y_pred):
+    cl_a, cl_b = 6, 2
+    X_aa = x_train[(y_train == cl_a) & (y_pred == cl_a)]
+    X_ab = x_train[(y_train == cl_a) & (y_pred == cl_b)]
+    X_ba = x_train[(y_train == cl_b) & (y_pred == cl_a)]
+    X_bb = x_train[(y_train == cl_b) & (y_pred == cl_b)]
+    plt.figure(figsize=(8,8))
+    plt.subplot(221); plot_digits(X_aa[:25], images_per_row=5)
+    plt.subplot(222); plot_digits(X_ab[:25], images_per_row=5)
+    plt.subplot(223); plot_digits(X_ba[:25], images_per_row=5)
+    plt.subplot(224); plot_digits(X_bb[:25], images_per_row=5)
+    plt.show()
+ 
+   
+def main():
     x_train, x_test, y_train_data, y_test_data = prep_data()
     x_train_pca, x_test_pca = run_incremental_PCA(x_train, x_test)
-
+     
     start = time.time()
-    # Create KNN Classifier
-    knn = KNeighborsClassifier(n_neighbors=7)
-
-    # Train the model using the training sets
+    #Create KNN Classifier
+    knn = KNeighborsClassifier(n_neighbors=5)
+    #Train the model using the training sets
     knn.fit(x_train_pca, y_train_data)
-
+     
     print("Training time:", (time.time() - start))
-
-    # Predict the response for test dataset
+     
+    #Predict the response for test dataset
     y_pred = knn.predict(x_test_pca)
-
+     
     print("Testing time:", (time.time() - start))
-
-    # Import scikit-learn metrics module for accuracy calculation
+ 
+    #Import scikit-learn metrics module for accuracy calculation
     # Model Accuracy, how often is the classifier correct?
     print("Accuracy:", metrics.accuracy_score(y_test_data, y_pred))
+    print("classification report: \n")
+    print(metrics.classification_report(y_test_data, y_pred))
+
+    accuracy = metrics.accuracy_score(y_test_data, y_pred)
+    print("accuracy of the classifier is: ", accuracy )
+    average_accuracy = np.mean(y_test_data == y_pred) * 100
+    print("The average_accuracy is {0:.1f}%".format(average_accuracy))
+    
+    
+    cf, y_train_pred = cf_matrix(knn, x_train_pca, y_train_data)
+    norm_cf  = cf_matrix_norm(cf)
+    plt.matshow(norm_cf, cmap=plt.cm.gray)
+    plt.show()
+    
+    cl_a, cl_b = 6, 2
+    plot_images(cl_a,cl_b,x_train, y_train_data, y_train_pred)
+    
+   
 
 
+if __name__ == "__main__":
+    main()
+
+    
+# =============================================================================
+#     plt.figure(figsize=(9,9))
+#     example_images = np.r_[x_train[:12000:600], x_train[13000:30600:600], x_train[30600:60000:590]]
+#     plot_digits(example_images, images_per_row=10)
+#     plt.show()
+# =============================================================================
+    
+# =============================================================================
+#     X_aa = x_train[(y_train_data == cl_a) & (y_train_pred == cl_a)]
+#     X_ab = x_train[(y_train_data == cl_a) & (y_train_pred == cl_b)]
+#     X_ba = x_train[(y_train_data == cl_b) & (y_train_pred == cl_a)]
+#     X_bb = x_train[(y_train_data == cl_b) & (y_train_pred == cl_b)]
+#     plt.figure(figsize=(8,8))
+#     plt.subplot(221); plot_digits(X_aa[:25], images_per_row=5)
+#     plt.subplot(222); plot_digits(X_ab[:25], images_per_row=5)
+#     plt.subplot(223); plot_digits(X_ba[:25], images_per_row=5)
+#     plt.subplot(224); plot_digits(X_bb[:25], images_per_row=5)
+#     plt.show()
+#     
+# =============================================================================
 # =============================================================================
 #     start = time.time()
 #     model.fit(x_train_pca, y_train_data)
 #     print("Training time:", (time.time() - start))
-#
+# 
 #     start = time.time()
 #     print("Train accuracy:", model.accuracy(x_train_pca, y_train_data))
 #     print(
@@ -126,7 +222,7 @@ if __name__ == "__main__":
 #         "Train size:",
 #         len(y_train_data),
 #     )
-#
+# 
 #     start = time.time()
 #     print("Test accuracy:", model.accuracy(x_test_pca, y_test_data))
 #     print(
@@ -135,28 +231,5 @@ if __name__ == "__main__":
 #         "Test size:",
 #         len(y_test_data),
 #     )
-#
+# 
 # =============================================================================
-
-#
-# X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
-# X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
-#
-# X_train = X_train.astype('float32') #images loaded in as int64, 0 to 255 integers
-# X_test = X_test.astype('float32')
-# # Normalization
-# X_train /= 255
-# X_test /= 255
-
-# plt.figure(figsize=(12,10))# Showing the Input Data after Normalizing
-# x, y = 4, 4
-# for i in range(15):
-#     plt.subplot(y, x, i+1)
-#     plt.imshow(X_train[i].reshape((28,28)),interpolation='nearest')
-# plt.show()
-
-# some_item = X_train[9000]
-# # some_item_image = some_item.reshape(28, 28)
-# # plt.imshow(some_item_image, cmap = matplotlib.cm.binary,interpolation="nearest")
-# # plt.axis("off")
-# # plt.show()
