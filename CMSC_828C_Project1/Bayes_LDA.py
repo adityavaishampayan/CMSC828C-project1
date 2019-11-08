@@ -8,6 +8,7 @@ from future.utils import iteritems
 from scipy.stats import multivariate_normal as mvn
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn import metrics
 
 
 class Dataset(object):
@@ -104,7 +105,7 @@ class Bayes(object):
         for category, g in iteritems(self.gaussian):
             mean, covariance = g["mean"], g["cov"]
             p[:, category] = mvn.logpdf(data, mean=mean, cov=covariance)
-            +np.log(self.priors[category])
+            + np.log(self.priors[category])
 
         return np.argmax(p, axis=1)
 
@@ -128,6 +129,9 @@ def prep_data():
     x_train, y_train = data_set.load("data/fashion", "train")
     x_test, y_test = data_set.load("data/fashion", "t10k")
 
+    shuffle_index = np.random.permutation(60000)
+    x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
+    
     x_train_norm = data_set.normalize(x_train)
     x_test_norm = data_set.normalize(x_test)
 
@@ -180,24 +184,24 @@ def main():
         "Testing dataset size:",
         len(y_test_data),
     )
+    
+    # Predict the response for test dataset
+    y_pred = model.predict(x_LDA_test)
+    print("Testing time:", (time.time() - start))
+    
+    # calculating accuracy of the classifier
+    accuracy = metrics.accuracy_score(y_test_data, y_pred)
+    print("accuracy of the classifier is: ", accuracy)
 
+    # classification report includes precision, recall, F1-score
+    print("classification report: \n")
+    print(metrics.classification_report(y_test_data, y_pred))
+
+    # average accuracy
+    average_accuracy = np.mean(y_test_data == y_pred) * 100
+    print("The average_accuracy is {0:.1f}%".format(average_accuracy))
+    
 
 if __name__ == "__main__":
     main()
 
-
-# =============================================================================
-# if __name__ == '__main__':
-#     model = Bayes()
-#     t0 = datetime.now()
-#     model.fit(x_train_LDA, y_train)
-#     print("Training time:", (datetime.now() - t0))
-#
-#     t0 = datetime.now()
-#     print("Train accuracy:", model.accuracy(x_train_LDA, y_train))
-#     print("Time to compute train accuracy:", (datetime.now() - t0), "Train size:", len(y_train))
-#
-#     t0 = datetime.now()
-#     print("Test accuracy:", model.accuracy(x_test_LDA, y_test))
-#     print("Time to compute test accuracy:", (datetime.now() - t0), "Test size:", len(y_test))
-# =============================================================================

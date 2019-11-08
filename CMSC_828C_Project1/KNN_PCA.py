@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov  7 15:23:24 2019
-
-@author: Aditya's HP Omen 15
-"""
-
 #!/usr/bin/env python3
 
 # importing required libraries
@@ -136,7 +129,6 @@ def cf_matrix(model, X, Y):
     """
     y_train_pred = cross_val_predict(model, X, Y, cv=3)
     conf_mx = confusion_matrix(Y, y_train_pred)
-    print(conf_mx)
     plt.matshow(conf_mx, cmap=plt.cm.gray)
     plt.show()
     return conf_mx, y_train_pred
@@ -227,28 +219,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# =============================================================================
-#     start = time.time()
-#     model.fit(x_train_pca, y_train_data)
-#     print("Training time:", (time.time() - start))
-# 
-#     start = time.time()
-#     print("Train accuracy:", model.accuracy(x_train_pca, y_train_data))
-#     print(
-#         "Time to compute train accuracy:",
-#         (time.time() - start),
-#         "Train size:",
-#         len(y_train_data),
-#     )
-# 
-#     start = time.time()
-#     print("Test accuracy:", model.accuracy(x_test_pca, y_test_data))
-#     print(
-#         "Time to compute test accuracy:",
-#         (time.time() - start),
-#         "Test size:",
-#         len(y_test_data),
-#     )
-# 
-# =============================================================================

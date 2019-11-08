@@ -6,6 +6,7 @@ from future.utils import iteritems
 from scipy.stats import multivariate_normal as mvn
 import numpy as np
 import time
+from sklearn import metrics
 
 
 class Dataset(object):
@@ -127,6 +128,9 @@ def prep_data():
     x_train, y_train = data_set.load("data/fashion", "train")
     x_test, y_test = data_set.load("data/fashion", "t10k")
 
+    shuffle_index = np.random.permutation(60000)
+    x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
+    
     x_train_norm = data_set.normalize(x_train)
     x_test_norm = data_set.normalize(x_test)
 
@@ -135,8 +139,10 @@ def prep_data():
 
 def main():
 
+    # preparing the data set
     x_train, x_test, y_train_data, y_test_data = prep_data()
 
+    # create the Bayes classifer
     model = Bayes()
     start = time.time()
     model.fit(x_train, y_train_data)
@@ -159,31 +165,24 @@ def main():
         "Testing data set size:",
         len(y_test_data),
     )
+    
+    # Predict the response for test dataset
+    y_pred = model.predict(x_test)
+    print("Testing time:", (time.time() - start))
+    
+    # calculating accuracy of the classifier
+    accuracy = metrics.accuracy_score(y_test_data, y_pred)
+    print("accuracy of the classifier is: ", accuracy)
+
+    # classification report includes precision, recall, F1-score
+    print("classification report: \n")
+    print(metrics.classification_report(y_test_data, y_pred))
+
+    # average accuracy
+    average_accuracy = np.mean(y_test_data == y_pred) * 100
+    print("The average_accuracy is {0:.1f}%".format(average_accuracy))
 
 
 if __name__ == "__main__":
     main()
 
-
-#
-# X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
-# X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
-#
-# X_train = X_train.astype('float32') #images loaded in as int64, 0 to 255 integers
-# X_test = X_test.astype('float32')
-# # Normalization
-# X_train /= 255
-# X_test /= 255
-
-# plt.figure(figsize=(12,10))# Showing the Input Data after Normalizing
-# x, y = 4, 4
-# for i in range(15):
-#     plt.subplot(y, x, i+1)
-#     plt.imshow(X_train[i].reshape((28,28)),interpolation='nearest')
-# plt.show()
-
-# some_item = X_train[9000]
-# # some_item_image = some_item.reshape(28, 28)
-# # plt.imshow(some_item_image, cmap = matplotlib.cm.binary,interpolation="nearest")
-# # plt.axis("off")
-# # plt.show()

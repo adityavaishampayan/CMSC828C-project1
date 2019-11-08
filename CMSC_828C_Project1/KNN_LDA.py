@@ -8,6 +8,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import confusion_matrix
 
 
 class Dataset(object):
@@ -43,6 +47,9 @@ def prep_data():
     data_set = Dataset()
     x_train, y_train = data_set.load("data/fashion", "train")
     x_test, y_test = data_set.load("data/fashion", "t10k")
+    
+    shuffle_index = np.random.permutation(60000)
+    x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
 
     x_train_norm = data_set.normalize(x_train)
     x_test_norm = data_set.normalize(x_test)
@@ -69,74 +76,126 @@ def run_LDA(train_data, test_data, y_train, y_test):
     return x_train_LDA, x_test_LDA
 
 
+def plot_digits(instances, images_per_row=10, **options):
+    """
+    This function plots the images
+    :param instances:
+    :param images_per_row: images per row
+    :param options:
+    :return: plots the image
+    """
+    size = 28
+    images_per_row = min(len(instances), images_per_row)
+    images = [instance.reshape(size,size) for instance in instances]
+    n_rows = (len(instances) - 1) // images_per_row + 1
+    row_images = []
+    n_empty = n_rows * images_per_row - len(instances)
+    images.append(np.zeros((size, size * n_empty)))
+    for row in range(n_rows):
+        rimages = images[row * images_per_row : (row + 1) * images_per_row]
+        row_images.append(np.concatenate(rimages, axis=1))
+    image = np.concatenate(row_images, axis=0)
+    plt.imshow(image, cmap = mpl.cm.binary, **options)
+    plt.axis("off")
+
+
+def cf_matrix(model, X, Y):
+    """
+    This function calculates the confusion matrix given the data and the labels
+    :param model: type of model e.g. knn
+    :param X: training data
+    :param Y: data labels
+    :return: confusion matrix and predictions on test data
+    """
+    y_train_pred = cross_val_predict(model, X, Y, cv=3)
+    conf_mx = confusion_matrix(Y, y_train_pred)
+    plt.matshow(conf_mx, cmap=plt.cm.gray)
+    plt.show()
+    return conf_mx, y_train_pred
+
+
+def cf_matrix_norm(cfm):
+    """
+    This function normalizes the confusion matrix
+    :param cfm: confusion matrix
+    :return: normalized confusion matrix
+    """
+    row_sums = cfm.sum(axis=1, keepdims=True)
+    norm_conf_mx = cfm / row_sums
+    np.fill_diagonal(norm_conf_mx, 0)
+    return norm_conf_mx
+
+
+def plot_images(a,b,x_train, y_train, y_pred):
+    """
+    This function plots the images in a 5x5 grid
+    :param a: true class label
+    :param b: predicted class label
+    :param x_train: training data
+    :param y_train: training data labels
+    :param y_pred: prediction on the test data
+    :return: None
+    """
+    cl_a = a
+    cl_b = b
+    x_aa = x_train[(y_train == cl_a) & (y_pred == cl_a)]
+    x_ab = x_train[(y_train == cl_a) & (y_pred == cl_b)]
+    x_ba = x_train[(y_train == cl_b) & (y_pred == cl_a)]
+    x_bb = x_train[(y_train == cl_b) & (y_pred == cl_b)]
+    plt.figure(figsize=(8,8))
+    plt.subplot(221)
+    plot_digits(x_aa[:25], images_per_row=5)
+    plt.subplot(222)
+    plot_digits(x_ab[:25], images_per_row=5)
+    plt.subplot(223)
+    plot_digits(x_ba[:25], images_per_row=5)
+    plt.subplot(224)
+    plot_digits(x_bb[:25], images_per_row=5)
+    plt.show()
+    
 def main():
-    """
-    This is the main function that calls sub functions
-    :return: none
-    """
-
+    # preparing the data set
     x_train, x_test, y_train_data, y_test_data = prep_data()
+    
+    # running LDA on the data set
     x_LDA_train, x_LDA_test = run_LDA(x_train, x_test, y_train_data, y_test_data)
-
+    
     start = time.time()
+    # Create KNN Classifier
     knn = KNeighborsClassifier(n_neighbors=5)
-
+    
     # Train the model using the training sets
     knn.fit(x_LDA_train, y_train_data)
-
     print("Training time:", (time.time() - start))
-
+    
     # Predict the response for test dataset
     y_pred = knn.predict(x_LDA_test)
-
     print("Testing time:", (time.time() - start))
 
     # Import scikit-learn metrics module for accuracy calculation
-    # Model Accuracy, how often is the classifier correct?
     print("Accuracy:", metrics.accuracy_score(y_test_data, y_pred))
 
+    # calculating accuracy of the classifier
+    accuracy = metrics.accuracy_score(y_test_data, y_pred)
+    print("accuracy of the classifier is: ", accuracy)
+
+    # classification report includes precision, recall, F1-score
+    print("classification report: \n")
+    print(metrics.classification_report(y_test_data, y_pred))
+
+    # average accuracy
+    average_accuracy = np.mean(y_test_data == y_pred) * 100
+    print("The average_accuracy is {0:.1f}%".format(average_accuracy))
+
+    # calculating the confusion matrix
+    cf, y_train_pred = cf_matrix(knn, x_LDA_train, y_train_data)
+
+    # normalizing the confusion matrix and plotting it
+    norm_cf = cf_matrix_norm(cf)
+    plt.matshow(norm_cf, cmap=plt.cm.gray)
+    plt.show()
+    
 
 if __name__ == "__main__":
     main()
 
-
-# =============================================================================
-#     start = time.time()
-#     model.fit(x_LDA_train, y_train_data)
-#     print("Time required for training:", float(time.time() - start))
-#
-#     start = time.time()
-#     print("Training accuracy:", model.accuracy(x_LDA_train, y_train_data))
-#     print(
-#         "Time required for computing train accuracy:",
-#         float(time.time() - start),
-#         "Training data size:",
-#         len(y_train_data),
-#     )
-#
-#     start = time.time()
-#     print("Testing accuracy:", model.accuracy(x_LDA_test, y_test_data))
-#     print(
-#         "Time required for computing test accuracy:",
-#         float(time.time() - start),
-#         "Testing dataset size:",
-#         len(y_test_data),
-#     )
-# =============================================================================
-
-
-# =============================================================================
-# if __name__ == '__main__':
-#     model = Bayes()
-#     t0 = datetime.now()
-#     model.fit(x_train_LDA, y_train)
-#     print("Training time:", (datetime.now() - t0))
-#
-#     t0 = datetime.now()
-#     print("Train accuracy:", model.accuracy(x_train_LDA, y_train))
-#     print("Time to compute train accuracy:", (datetime.now() - t0), "Train size:", len(y_train))
-#
-#     t0 = datetime.now()
-#     print("Test accuracy:", model.accuracy(x_test_LDA, y_test))
-#     print("Time to compute test accuracy:", (datetime.now() - t0), "Test size:", len(y_test))
-# =============================================================================

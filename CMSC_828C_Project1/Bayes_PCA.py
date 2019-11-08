@@ -8,6 +8,7 @@ from sklearn.decomposition import PCA
 from sklearn.decomposition import IncrementalPCA
 import numpy as np
 import time
+from sklearn import metrics
 
 
 class Dataset(object):
@@ -129,13 +130,16 @@ def prep_data():
     x_train, y_train = data_set.load("data/fashion", "train")
     x_test, y_test = data_set.load("data/fashion", "t10k")
 
+    shuffle_index = np.random.permutation(60000)
+    x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
+    
     x_train_norm = data_set.normalize(x_train)
     x_test_norm = data_set.normalize(x_test)
 
     return x_train_norm, x_test_norm, y_train, y_test
 
 
-def run_PCA(train_data, test_data):
+def run_pca(train_data, test_data):
     """
     This function performs PCA on data set and reduces its dimensionality
     :param train_data: train data for PCA dimensionality reduction
@@ -154,7 +158,7 @@ def run_PCA(train_data, test_data):
     return x_train_pca, x_test_pca
 
 
-def run_incremental_PCA(train_data, test_data, n_batches=50):
+def run_incremental_pca(train_data, test_data, n_batches=50):
     """
     :param train_data: train_data: train data for incremental PCA dimensionality reduction
     :param test_data: test data for incremental PCA dimensionality reduction
@@ -176,11 +180,17 @@ def run_incremental_PCA(train_data, test_data, n_batches=50):
 
 if __name__ == "__main__":
 
+    # preparing the data set
     x_train, x_test, y_train_data, y_test_data = prep_data()
-    x_train_pca, x_test_pca = run_incremental_PCA(x_train, x_test)
 
+    # running incremental pca on the data set
+    x_train_pca, x_test_pca = run_incremental_pca(x_train, x_test)
+
+    # create the Bayes classifer
     model = Bayes()
     start = time.time()
+
+    # Run the model using the training sets
     model.fit(x_train_pca, y_train_data)
     print("Training time:", (time.time() - start))
 
@@ -202,27 +212,21 @@ if __name__ == "__main__":
         len(y_test_data),
     )
 
+    # Predict the response for test data set
+    y_pred = model.predict(x_test_pca)
+    print("Testing time:", (time.time() - start))
+    
+    # calculating accuracy of the classifier
+    accuracy = metrics.accuracy_score(y_test_data, y_pred)
+    print("accuracy of the classifier is: ", accuracy)
 
-#
-# X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
-# X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
-#
-# X_train = X_train.astype('float32') #images loaded in as int64, 0 to 255 integers
-# X_test = X_test.astype('float32')
-# # Normalization
-# X_train /= 255
-# X_test /= 255
+    # classification report includes precision, recall, F1-score
+    print("classification report: \n")
+    print(metrics.classification_report(y_test_data, y_pred))
 
-# plt.figure(figsize=(12,10))# Showing the Input Data after Normalizing
-# x, y = 4, 4
-# for i in range(15):
-#     plt.subplot(y, x, i+1)
-#     plt.imshow(X_train[i].reshape((28,28)),interpolation='nearest')
-# plt.show()
+    # average accuracy
+    average_accuracy = np.mean(y_test_data == y_pred) * 100
+    print("The average_accuracy is {0:.1f}%".format(average_accuracy))
 
-# some_item = X_train[9000]
-# # some_item_image = some_item.reshape(28, 28)
-# # plt.imshow(some_item_image, cmap = matplotlib.cm.binary,interpolation="nearest")
-# # plt.axis("off")
-# # plt.show()
+
 
