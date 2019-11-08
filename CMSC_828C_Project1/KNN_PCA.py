@@ -45,6 +45,7 @@ class Dataset(object):
         normalised_data = data_vector / 255
         return normalised_data
 
+
 def prep_data():
     """
     This function preps the data set for further application
@@ -63,7 +64,7 @@ def prep_data():
     return x_train_norm, x_test_norm, y_train, y_test
 
 
-def run_PCA(train_data, test_data):
+def run_pca(train_data, test_data):
     """
     This function performs PCA on data set and reduces its dimensionality
     :param train_data: train data for PCA dimensionality reduction
@@ -82,7 +83,7 @@ def run_PCA(train_data, test_data):
     return x_train_pca, x_test_pca
 
 
-def run_incremental_PCA(train_data, test_data, n_batches=50):
+def run_incremental_pca(train_data, test_data, n_batches=50):
     """
     :param train_data: train_data: train data for incremental PCA dimensionality reduction
     :param test_data: test data for incremental PCA dimensionality reduction
@@ -101,7 +102,15 @@ def run_incremental_PCA(train_data, test_data, n_batches=50):
 
     return x_train_pca_inc, x_test_pca_inc
 
+
 def plot_digits(instances, images_per_row=10, **options):
+    """
+    This function plots the images
+    :param instances:
+    :param images_per_row: images per row
+    :param options:
+    :return: plots the image
+    """
     size = 28
     images_per_row = min(len(instances), images_per_row)
     images = [instance.reshape(size,size) for instance in instances]
@@ -116,99 +125,109 @@ def plot_digits(instances, images_per_row=10, **options):
     plt.imshow(image, cmap = mpl.cm.binary, **options)
     plt.axis("off")
 
+
 def cf_matrix(model, X, Y):
-    #y_train_pred = cross_val_predict(knn, x_train_pca, y_train_data, cv=3)
+    """
+    This function calculates the confusion matrix given the data and the labels
+    :param model: type of model e.g. knn
+    :param X: training data
+    :param Y: data labels
+    :return: confusion matrix and predictions on test data
+    """
     y_train_pred = cross_val_predict(model, X, Y, cv=3)
-    conf_mx =confusion_matrix(Y, y_train_pred)
+    conf_mx = confusion_matrix(Y, y_train_pred)
     print(conf_mx)
     plt.matshow(conf_mx, cmap=plt.cm.gray)
     plt.show()
     return conf_mx, y_train_pred
 
+
 def cf_matrix_norm(cfm):
+    """
+    This function normalizes the confusion matrix
+    :param cfm: confusion matrix
+    :return: normalized confusion matrix
+    """
     row_sums = cfm.sum(axis=1, keepdims=True)
     norm_conf_mx = cfm / row_sums
     np.fill_diagonal(norm_conf_mx, 0)
     return norm_conf_mx
-    
+
+
 def plot_images(a,b,x_train, y_train, y_pred):
-    cl_a, cl_b = 6, 2
-    X_aa = x_train[(y_train == cl_a) & (y_pred == cl_a)]
-    X_ab = x_train[(y_train == cl_a) & (y_pred == cl_b)]
-    X_ba = x_train[(y_train == cl_b) & (y_pred == cl_a)]
-    X_bb = x_train[(y_train == cl_b) & (y_pred == cl_b)]
+    """
+    This function plots the images in a 5x5 grid
+    :param a: true class label
+    :param b: predicted class label
+    :param x_train: training data
+    :param y_train: training data labels
+    :param y_pred: prediction on the test data
+    :return: None
+    """
+    cl_a = a
+    cl_b = b
+    x_aa = x_train[(y_train == cl_a) & (y_pred == cl_a)]
+    x_ab = x_train[(y_train == cl_a) & (y_pred == cl_b)]
+    x_ba = x_train[(y_train == cl_b) & (y_pred == cl_a)]
+    x_bb = x_train[(y_train == cl_b) & (y_pred == cl_b)]
     plt.figure(figsize=(8,8))
-    plt.subplot(221); plot_digits(X_aa[:25], images_per_row=5)
-    plt.subplot(222); plot_digits(X_ab[:25], images_per_row=5)
-    plt.subplot(223); plot_digits(X_ba[:25], images_per_row=5)
-    plt.subplot(224); plot_digits(X_bb[:25], images_per_row=5)
+    plt.subplot(221)
+    plot_digits(x_aa[:25], images_per_row=5)
+    plt.subplot(222)
+    plot_digits(x_ab[:25], images_per_row=5)
+    plt.subplot(223)
+    plot_digits(x_ba[:25], images_per_row=5)
+    plt.subplot(224)
+    plot_digits(x_bb[:25], images_per_row=5)
     plt.show()
  
    
 def main():
+    # preparing the data set
     x_train, x_test, y_train_data, y_test_data = prep_data()
-    x_train_pca, x_test_pca = run_incremental_PCA(x_train, x_test)
+
+    # running incremental pca on the data set
+    x_train_pca, x_test_pca = run_incremental_pca(x_train, x_test)
      
     start = time.time()
-    #Create KNN Classifier
+
+    # Create KNN Classifier
     knn = KNeighborsClassifier(n_neighbors=5)
-    #Train the model using the training sets
+    # Run the model using the training sets
     knn.fit(x_train_pca, y_train_data)
-     
     print("Training time:", (time.time() - start))
-     
-    #Predict the response for test dataset
+
+    # Predict the response for test data set
     y_pred = knn.predict(x_test_pca)
-     
     print("Testing time:", (time.time() - start))
- 
-    #Import scikit-learn metrics module for accuracy calculation
-    # Model Accuracy, how often is the classifier correct?
-    print("Accuracy:", metrics.accuracy_score(y_test_data, y_pred))
+
+    # calculating accuracy of the classifier
+    accuracy = metrics.accuracy_score(y_test_data, y_pred)
+    print("accuracy of the classifier is: ", accuracy)
+
+    # classification report includes precision, recall, F1-score
     print("classification report: \n")
     print(metrics.classification_report(y_test_data, y_pred))
 
-    accuracy = metrics.accuracy_score(y_test_data, y_pred)
-    print("accuracy of the classifier is: ", accuracy )
+    # average accuracy
     average_accuracy = np.mean(y_test_data == y_pred) * 100
     print("The average_accuracy is {0:.1f}%".format(average_accuracy))
-    
-    
+
+    # calculating the confusion matrix
     cf, y_train_pred = cf_matrix(knn, x_train_pca, y_train_data)
-    norm_cf  = cf_matrix_norm(cf)
+
+    # normalizing the confusion matrix and plotting it
+    norm_cf = cf_matrix_norm(cf)
     plt.matshow(norm_cf, cmap=plt.cm.gray)
     plt.show()
     
     cl_a, cl_b = 6, 2
     plot_images(cl_a,cl_b,x_train, y_train_data, y_train_pred)
-    
-   
 
 
 if __name__ == "__main__":
     main()
 
-    
-# =============================================================================
-#     plt.figure(figsize=(9,9))
-#     example_images = np.r_[x_train[:12000:600], x_train[13000:30600:600], x_train[30600:60000:590]]
-#     plot_digits(example_images, images_per_row=10)
-#     plt.show()
-# =============================================================================
-    
-# =============================================================================
-#     X_aa = x_train[(y_train_data == cl_a) & (y_train_pred == cl_a)]
-#     X_ab = x_train[(y_train_data == cl_a) & (y_train_pred == cl_b)]
-#     X_ba = x_train[(y_train_data == cl_b) & (y_train_pred == cl_a)]
-#     X_bb = x_train[(y_train_data == cl_b) & (y_train_pred == cl_b)]
-#     plt.figure(figsize=(8,8))
-#     plt.subplot(221); plot_digits(X_aa[:25], images_per_row=5)
-#     plt.subplot(222); plot_digits(X_ab[:25], images_per_row=5)
-#     plt.subplot(223); plot_digits(X_ba[:25], images_per_row=5)
-#     plt.subplot(224); plot_digits(X_bb[:25], images_per_row=5)
-#     plt.show()
-#     
-# =============================================================================
 # =============================================================================
 #     start = time.time()
 #     model.fit(x_train_pca, y_train_data)
