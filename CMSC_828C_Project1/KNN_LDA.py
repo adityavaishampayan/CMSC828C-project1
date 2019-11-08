@@ -17,6 +17,7 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score
 
 # Local application imports
 from utils import mnist_reader
@@ -159,6 +160,17 @@ def plot_images(a,b,x_train, y_train, y_pred):
     plt.subplot(224)
     plot_digits(x_bb[:25], images_per_row=5)
     plt.show()
+
+def cross_val(model, X, Y):
+    scores = cross_val_score(model, X, Y,
+                             scoring="accuracy", cv=10)
+    return scores
+
+def display_scores(scores):
+    print("Scores: " + str(scores) + "\n")
+    print("Mean: " + str(scores.mean()) + "\n")
+    print("Standard deviation: " + str(scores.std()) + "\n")
+        
     
 def main():
     # preparing the data set
@@ -174,6 +186,11 @@ def main():
     # Train the model using the training sets
     knn.fit(x_LDA_train, y_train_data)
     print("Training time:", (time.time() - start))
+    
+    #running cross validation on dataset
+    corss_val_score = cross_val(knn, x_LDA_train, y_train_data)
+    print("displaying cross validation scores: ")
+    display_scores(corss_val_score)
     
     # Predict the response for test dataset
     y_pred = knn.predict(x_LDA_test)

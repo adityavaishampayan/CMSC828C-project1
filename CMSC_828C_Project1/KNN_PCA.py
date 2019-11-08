@@ -17,6 +17,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score
+
 
 # Local application imports
 from utils import mnist_reader
@@ -45,7 +47,7 @@ class Dataset(object):
         data_vector.astype("float32")
         normalised_data = data_vector / 255
         return normalised_data
-
+    
 
 def prep_data():
     """
@@ -181,7 +183,16 @@ def plot_images(a,b,x_train, y_train, y_pred):
     plot_digits(x_bb[:25], images_per_row=5)
     plt.show()
  
-   
+def cross_val(model, X, Y):
+    scores = cross_val_score(model, X, Y,
+                             scoring="accuracy", cv=10)
+    return scores
+
+def display_scores(scores):
+    print("Scores: " + str(scores) + "\n")
+    print("Mean: " + str(scores.mean()) + "\n")
+    print("Standard deviation: " + str(scores.std()) + "\n")
+        
 def main():
     # preparing the data set
     x_train, x_test, y_train_data, y_test_data = prep_data()
@@ -195,15 +206,20 @@ def main():
     knn = KNeighborsClassifier(n_neighbors=5)
     # Run the model using the training sets
     knn.fit(x_train_pca, y_train_data)
-    print("Training time:", (time.time() - start))
-
+    print("Training time: " + str(time.time() - start) + "\n" )
+        
+    #running cross validation on dataset
+    corss_val_score = cross_val(knn, x_train_pca, y_train_data)
+    print("displaying cross validation scores: ")
+    display_scores(corss_val_score)
+    
     # Predict the response for test data set
     y_pred = knn.predict(x_test_pca)
-    print("Testing time:", (time.time() - start))
+    print("Testing time: " +  str(time.time() - start) + "\n")
 
     # calculating accuracy of the classifier
     accuracy = metrics.accuracy_score(y_test_data, y_pred)
-    print("accuracy of the classifier is: ", accuracy)
+    print("accuracy of the classifier is: " +  str(accuracy) + "\n")
 
     # classification report includes precision, recall, F1-score
     print("classification report: \n")
