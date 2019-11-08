@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 
+# Standard library imports
+import sys
+import time
+
+# Adds higher directory to python modules path
+sys.path.append("..") 
+
 # importing required libraries
 import numpy as np
-import time
-from utils import mnist_reader
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from matplotlib import pyplot as plt
@@ -11,6 +16,8 @@ import matplotlib as mpl
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import confusion_matrix
 
+# Local application imports
+from utils import mnist_reader
 
 class Dataset(object):
     def __init__(self):
@@ -43,8 +50,8 @@ def prep_data():
     :return: normalised test and train data
     """
     data_set = Dataset()
-    x_train, y_train = data_set.load("data/fashion", "train")
-    x_test, y_test = data_set.load("data/fashion", "t10k")
+    x_train, y_train = data_set.load("../data/fashion", "train")
+    x_test, y_test = data_set.load("../data/fashion", "t10k")
 
     shuffle_index = np.random.permutation(60000)
     x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]

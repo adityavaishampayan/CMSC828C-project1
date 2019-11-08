@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 
-# importing required libraries
-from utils import mnist_reader
+# Standard library imports
+import sys
+import time
+
+# Adds higher directory to python modules path.
+sys.path.append("..") # Adds higher directory to python modules path
+
+# Third party imports
 from future.utils import iteritems
 from scipy.stats import multivariate_normal as mvn
 from sklearn.decomposition import PCA
 from sklearn.decomposition import IncrementalPCA
 import numpy as np
-import time
 from sklearn import metrics
 
+# Local application imports
+from utils import mnist_reader
 
 class Dataset(object):
     def __init__(self):
@@ -127,8 +134,8 @@ def prep_data():
     :return: normalised test and train data
     """
     data_set = Dataset()
-    x_train, y_train = data_set.load("data/fashion", "train")
-    x_test, y_test = data_set.load("data/fashion", "t10k")
+    x_train, y_train = data_set.load("../data/fashion", "train")
+    x_test, y_test = data_set.load("../data/fashion", "t10k")
 
     shuffle_index = np.random.permutation(60000)
     x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
