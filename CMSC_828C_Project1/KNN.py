@@ -53,7 +53,7 @@ def prep_data():
     x_train, y_train = data_set.load("../data/fashion", "train")
     x_test, y_test = data_set.load("../data/fashion", "t10k")
 
-    shuffle_index = np.random.permutation(60000)
+    shuffle_index = np.random.RandomState(seed=42).permutation(60000)
     x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
 
     x_train_norm = data_set.normalize(x_train)
