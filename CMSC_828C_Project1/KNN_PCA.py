@@ -240,6 +240,34 @@ def main():
     cl_a, cl_b = 6, 2
     plot_images(cl_a,cl_b,x_train, y_train_data, y_train_pred)
 
+    
+    # try K=1 through K=25 and record testing accuracy
+    k_range = range(25, 51)
+    
+    # We can create Python dictionary using [] or dict()
+    scores = dict()
+    plot_scores = []
+    
+    # We use a loop through the range 1 to 26
+    # We append the scores in the dictionary
+    for k in k_range:
+        print("k = ", k)
+        knn = KNeighborsClassifier(n_neighbors=k)
+        start = time.time()
+        knn.fit(x_train_pca, y_train_data)
+        y_pred = knn.predict(x_test_pca)
+        print("time required: " + str(time.time() - start) + "\n")
+        scores.update({k:metrics.accuracy_score(y_test_data, y_pred)})
+        plot_scores.append(metrics.accuracy_score(y_test_data, y_pred))
+    
+    print(scores)
+    
+    # plot the relationship between K and testing accuracy
+    # plt.plot(x_axis, y_axis)
+    plt.plot(k_range, scores)
+    plt.xlabel('Value of K for KNN')
+    plt.ylabel('Testing Accuracy')
+    plt.show()
 
 if __name__ == "__main__":
     main()
