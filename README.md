@@ -7,13 +7,13 @@ Implementated Maximum Likelihood Estimation (MLE) with Gaussian assumption follo
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Prerequisites
 
 What things you need to install the software and how to install them
 
-To run this project one needs to set up a virtual environment in the pc. For Anaconda users it can be done as follows:
+To run this project one needs to set up a virtual environment. 
+#### For Anaconda users it can be done as follows:
 
 ```
 conda update conda
@@ -22,6 +22,7 @@ conda update conda
 conda create -n yourenvname python=x.x anaconda
 ```
 Press y to proceed. This will install the Python version and all the associated anaconda packaged libraries at “path_to_your_anaconda_location/anaconda/envs/yourenvname”
+
 To activate the virtual environment:
 ```
 source activate yourenvname
@@ -29,6 +30,25 @@ source activate yourenvname
 Install git for cloning the repo:
 ```
 conda install -c anaconda git
+```
+#### For ubuntu users:
+
+Install dependencies
+```
+sudo apt install python-pip
+```
+Create virtual environment directory
+```
+mkdir /home/yourfoldername
+cd /home/yourfoldername
+```
+Install virtualenv
+```
+pip install virtualenv
+```
+Create a virtual environment
+```
+virtualenv envname
 ```
 
 ### Installing
