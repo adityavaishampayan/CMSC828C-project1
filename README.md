@@ -1,6 +1,28 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## Table of Contents
+- [Machine Learning From Scratch](#machine-learning-from-scratch)
+  * [About](#about)
+  * [Table of Contents](#table-of-contents)
+  * [Installation](#installation)
+  * [Examples](#examples)
+    + [Polynomial Regression](#polynomial-regression)
+    + [Classification With CNN](#classification-with-cnn)
+    + [Density-Based Clustering](#density-based-clustering)
+    + [Generating Handwritten Digits](#generating-handwritten-digits)
+    + [Deep Reinforcement Learning](#deep-reinforcement-learning)
+    + [Image Reconstruction With RBM](#image-reconstruction-with-rbm)
+    + [Evolutionary Evolved Neural Network](#evolutionary-evolved-neural-network)
+    + [Genetic Algorithm](#genetic-algorithm)
+    + [Association Analysis](#association-analysis)
+  * [Implementations](#implementations)
+    + [Supervised Learning](#supervised-learning)
+    + [Unsupervised Learning](#unsupervised-learning)
+    + [Reinforcement Learning](#reinforcement-learning)
+    + [Deep Learning](#deep-learning)
+  * [Contact](#contact)
+  
 # CMSC828C-project-1
 
 Implementated Maximum Likelihood Estimation (MLE) with Gaussian assumption followed by Bayes rule for classification. Also implemented the same after applying PCA and LDA for dimensionality reduction
