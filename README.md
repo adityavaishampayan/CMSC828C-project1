@@ -26,52 +26,66 @@ To activate the virtual environment:
 ```
 source activate yourenvname
 ```
+Install git for cloning the repo:
+```
+conda install -c anaconda git
+```
 
 ### Installing
 
 Once in the virtual environemnet:
 
 * To clone this repo in your virtual environment:
-'''
+```
 git clone https://github.com/adityavaishampayan/CMSC828C-project1.git
-'''
+```
 * cd to the CMSC828C-project1 folder and then install the requirements file 
 ```
 pip install -r requirements.txt
 ```
 This will install all the required libraries to run this project
 
-```
-Give the example
-```
+# Context
 
-And repeat
+Fashion-MNIST is a dataset of Zalando's article images—consisting of a training set of 60,000 examples and a test set of 10,000 examples. Each example is a 28x28 grayscale image, associated with a label from 10 classes. Zalando intends Fashion-MNIST to serve as a direct drop-in replacement for the original MNIST dataset for benchmarking machine learning algorithms. It shares the same image size and structure of training and testing splits.
 
-```
-until finished
-```
+The original MNIST dataset contains a lot of handwritten digits. Members of the AI/ML/Data Science community love this dataset and use it as a benchmark to validate their algorithms. In fact, MNIST is often the first dataset researchers try. "If it doesn't work on MNIST, it won't work at all", they said. "Well, if it does work on MNIST, it may still fail on others."
 
-End with an example of getting some data out of the system or using it for a little demo
+Zalando seeks to replace the original MNIST dataset
 
-## Running the tests
+# Content
 
-Explain how to run the automated tests for this system
+Each image is 28 pixels in height and 28 pixels in width, for a total of 784 pixels in total. Each pixel has a single pixel-value associated with it, indicating the lightness or darkness of that pixel, with higher numbers meaning darker. This pixel-value is an integer between 0 and 255. The training and test data sets have 785 columns. The first column consists of the class labels (see above), and represents the article of clothing. The rest of the columns contain the pixel-values of the associated image.
 
-### Break down into end to end tests
+# Labels
 
-Explain what these tests test and why
+Each training and test example is assigned to one of the following labels:
 
-```
-Give an example
-```
+0 T-shirt/top
 
-### And coding style tests
+1 Trouser
 
-Explain what these tests test and why
+2 Pullover
 
-```
-Give an example
-```
+3 Dress
+
+4 Coat
+
+5 Sandal
+
+6 Shirt
+
+7 Sneaker
+
+8 Bag
+
+9 Ankle boot 
+
+Each row is a separate image
+Column 1 is the class label.
+Remaining columns are pixel numbers (784 total).
+Each value is the darkness of the pixel (1 to 255)
+
 ## Built With
 
 * [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
