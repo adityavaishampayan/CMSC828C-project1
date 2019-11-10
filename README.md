@@ -13,8 +13,18 @@ These instructions will get you a copy of the project up and running on your loc
 
 What things you need to install the software and how to install them
 
+To run this project one needs to set up a virtual environment in the pc. For Anaconda users it can be done as follows:
+
 ```
-Give examples
+conda update conda
+```
+```
+conda create -n yourenvname python=x.x anaconda
+```
+Press y to proceed. This will install the Python version and all the associated anaconda packaged libraries at “path_to_your_anaconda_location/anaconda/envs/yourenvname”
+To activate the virtual environment:
+```
+source activate yourenvname
 ```
 
 ### Installing
@@ -75,9 +85,8 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Aditya Vaishampayan** - *Initial work* - [PurpleBooth](https://github.com/adityavaishampayan)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 ## License
 
