@@ -15,6 +15,7 @@ import numpy as np
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from matplotlib import pyplot as plt
 
 # Local application imports
 from utils import mnist_reader
@@ -147,7 +148,7 @@ def prep_data():
     return x_train_norm, x_test_norm, y_train, y_test
 
 
-def run_LDA(train_data, test_data, y_train, y_test):
+def run_LDA(train_data, test_data, y_train, y_test, k):
     """
     This function performs LDA on dataset and reduces its dimensionality
     :param train_data: train data for LDA dimensionality reduction
@@ -160,13 +161,13 @@ def run_LDA(train_data, test_data, y_train, y_test):
     x_train_scaled = sc.fit_transform(train_data)
     x_test_scaled = sc.transform(test_data)
     
-    lda = LDA()     
-    lda.fit(x_train_scaled, y_train)
-    cumsum = np.cumsum(lda.explained_variance_ratio_)
-    d = np.argmax(cumsum >= 0.99) + 1
-    print("no. of dimensions: ", d)
+#    lda = LDA()     
+#    lda.fit(x_train_scaled, y_train)
+#    cumsum = np.cumsum(lda.explained_variance_ratio_)
+#    d = np.argmax(cumsum >= 0.99) + 1
+#    print("no. of dimensions: ", d)
     
-    lda = LDA(n_components= 9)
+    lda = LDA(n_components= k)
     x_train_LDA = lda.fit_transform(x_train_scaled, y_train)
     x_test_LDA = lda.transform(x_test_scaled)
 
@@ -176,47 +177,69 @@ def run_LDA(train_data, test_data, y_train, y_test):
 def main():
 
     x_train, x_test, y_train_data, y_test_data = prep_data()
-    x_LDA_train, x_LDA_test = run_LDA(x_train, x_test, y_train_data, y_test_data)
-
+    
+    scores = dict()
+    plot_scores = []
+    
+    k_range = range(1,21)
+    
     model = Bayes()
-    start = time.time()
-    model.fit(x_LDA_train, y_train_data)
-    print("Time required for training:", float(time.time() - start))
-
-    start = time.time()
-    print("Training accuracy:", model.accuracy(x_LDA_train, y_train_data))
-    print(
-        "Time required for computing train accuracy:",
-        float(time.time() - start),
-        "Training data size:",
-        len(y_train_data),
-    )
-
-    start = time.time()
-    print("Testing accuracy:", model.accuracy(x_LDA_test, y_test_data))
-    print(
-        "Time required for computing test accuracy:",
-        float(time.time() - start),
-        "Testing dataset size:",
-        len(y_test_data),
-    )
     
-    # Predict the response for test dataset
-    y_pred = model.predict(x_LDA_test)
-    print("Testing time:", (time.time() - start))
+    for k in k_range:
+        
+        print(k)
+        
+        x_LDA_train, x_LDA_test = run_LDA(x_train, x_test, y_train_data, y_test_data, k)
     
-    # calculating accuracy of the classifier
-    accuracy = metrics.accuracy_score(y_test_data, y_pred)
-    print("accuracy of the classifier is: ", accuracy)
-
-    # classification report includes precision, recall, F1-score
-    print("classification report: \n")
-    print(metrics.classification_report(y_test_data, y_pred))
-
-    # average accuracy
-    average_accuracy = np.mean(y_test_data == y_pred) * 100
-    print("The average_accuracy is {0:.1f}%".format(average_accuracy))
+        #start = time.time()
+        model.fit(x_LDA_train, y_train_data)
+#        print("Time required for training:", float(time.time() - start))
+#    
+#        start = time.time()
+#        print("Training accuracy:", model.accuracy(x_LDA_train, y_train_data))
+#        print(
+#            "Time required for computing train accuracy:",
+#            float(time.time() - start),
+#            "Training data size:",
+#            len(y_train_data),
+#        )
+#    
+#        start = time.time()
+#        print("Testing accuracy:", model.accuracy(x_LDA_test, y_test_data))
+#        print(
+#            "Time required for computing test accuracy:",
+#            float(time.time() - start),
+#            "Testing dataset size:",
+#            len(y_test_data),
+#        )
+#        
+#        # Predict the response for test dataset
+        y_pred = model.predict(x_LDA_test)
+#        print("Testing time:", (time.time() - start))
+#        
+#        # calculating accuracy of the classifier
+#        accuracy = metrics.accuracy_score(y_test_data, y_pred)
+#        print("accuracy of the classifier is: ", accuracy)
+#    
+#        # classification report includes precision, recall, F1-score
+#        print("classification report: \n")
+#        print(metrics.classification_report(y_test_data, y_pred))
+#    
+#        # average accuracy
+#        average_accuracy = np.mean(y_test_data == y_pred) * 100
+#        print("The average_accuracy is {0:.1f}%".format(average_accuracy))
+        
+        scores.update({k:metrics.accuracy_score(y_test_data, y_pred)})
+        plot_scores.append(metrics.accuracy_score(y_test_data, y_pred))
     
-
+    print(scores)
+    
+    # plot the relationship between K and testing accuracy
+    # plt.plot(x_axis, y_axis)
+    plt.plot(k_range, plot_scores)
+    plt.xlabel('dimensions in LDA')
+    plt.ylabel('Testing Accuracy')
+    plt.show()
+    
 if __name__ == "__main__":
     main()

@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 
-
 # Standard library imports
 import sys
 import time
 
 # Adds higher directory to python modules path.
-sys.path.append("..") 
+sys.path.append("..") # Adds higher directory to python modules path
 
 # Third party imports
 from future.utils import iteritems
 from scipy.stats import multivariate_normal as mvn
+from sklearn.decomposition import PCA
+from sklearn.decomposition import IncrementalPCA
 import numpy as np
 from sklearn import metrics
-from sklearn.preprocessing import StandardScaler
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 # Local application imports
 from utils import mnist_reader
-
 
 class Dataset(object):
     def __init__(self):
@@ -113,8 +111,9 @@ class Bayes(object):
 
         for category, g in iteritems(self.gaussian):
             mean, covariance = g["mean"], g["cov"]
-            p[:, category] = mvn.logpdf(data, mean=mean, cov=covariance)
-            + np.log(self.priors[category])
+            p[:, category] = mvn.logpdf(data, mean=mean, cov=covariance) + np.log(
+                self.priors[category]
+            )
 
         return np.argmax(p, axis=1)
 
@@ -131,7 +130,7 @@ class Bayes(object):
 
 def prep_data():
     """
-    This function preps the dataset for further application
+    This function preps the data set for further application
     :return: normalised test and train data
     """
     data_set = Dataset()
@@ -147,62 +146,81 @@ def prep_data():
     return x_train_norm, x_test_norm, y_train, y_test
 
 
-def run_LDA(train_data, test_data, y_train, y_test):
+def run_pca(train_data, test_data):
     """
-    This function performs LDA on dataset and reduces its dimensionality
-    :param train_data: train data for LDA dimensionality reduction
-    :param test_data: test data for LDA dimensionality reduction
-    :param y_train: training data labels
-    :param y_test: testing data labels
-    :return: train and test data with reduced dimensionality
+    This function performs PCA on data set and reduces its dimensionality
+    :param train_data: train data for PCA dimensionality reduction
+    :param test_data: test data for PCA dimensionality reduction
+    :return: train and test data after applying PCA
     """
-    sc = StandardScaler()
-    x_train_scaled = sc.fit_transform(train_data)
-    x_test_scaled = sc.transform(test_data)
-    
-    lda = LDA()     
-    lda.fit(x_train_scaled, y_train)
-    cumsum = np.cumsum(lda.explained_variance_ratio_)
-    d = np.argmax(cumsum >= 0.99) + 1
+    pca = PCA()
+    pca.fit(train_data)
+    cumsum = np.cumsum(pca.explained_variance_ratio_)
+    d = np.argmax(cumsum >= 0.95) + 1
     print("no. of dimensions: ", d)
-    
-    lda = LDA(n_components= 9)
-    x_train_LDA = lda.fit_transform(x_train_scaled, y_train)
-    x_test_LDA = lda.transform(x_test_scaled)
+    pca = PCA(n_components=d)
+    x_train_pca = pca.fit_transform(train_data)
+    x_test_pca = pca.fit_transform(test_data)
 
-    return x_train_LDA, x_test_LDA
+    return x_train_pca, x_test_pca
 
 
-def main():
+def run_incremental_pca(train_data, test_data, n_batches=53):
+    """
+    :param train_data: train_data: train data for incremental PCA dimensionality reduction
+    :param test_data: test data for incremental PCA dimensionality reduction
+    :param n_batches: default parameter
+    :return: train and test data after applying incremental PCA
+    """
 
+    inc_pca = IncrementalPCA(n_components=187)
+    for X_batch in np.array_split(train_data, n_batches):
+        inc_pca.partial_fit(X_batch)
+    x_train_pca_inc = inc_pca.transform(train_data)
+
+    for X_batch in np.array_split(test_data, n_batches):
+        inc_pca.partial_fit(X_batch)
+    x_test_pca_inc = inc_pca.transform(test_data)
+
+    return x_train_pca_inc, x_test_pca_inc
+
+
+if __name__ == "__main__":
+
+    # preparing the data set
     x_train, x_test, y_train_data, y_test_data = prep_data()
-    x_LDA_train, x_LDA_test = run_LDA(x_train, x_test, y_train_data, y_test_data)
 
+    # running incremental pca on the data set
+    x_train_pca, x_test_pca = run_incremental_pca(x_train, x_test)
+
+    # create the Bayes classifer
     model = Bayes()
     start = time.time()
-    model.fit(x_LDA_train, y_train_data)
-    print("Time required for training:", float(time.time() - start))
+
+    # Run the model using the training sets
+    model.fit(x_train_pca, y_train_data)
+    print("Training time:", (time.time() - start))
 
     start = time.time()
-    print("Training accuracy:", model.accuracy(x_LDA_train, y_train_data))
+    print("Train accuracy:", model.accuracy(x_train_pca, y_train_data))
     print(
-        "Time required for computing train accuracy:",
-        float(time.time() - start),
-        "Training data size:",
+        "Time to compute train accuracy:",
+        (time.time() - start),
+        "Train size:",
         len(y_train_data),
     )
 
     start = time.time()
-    print("Testing accuracy:", model.accuracy(x_LDA_test, y_test_data))
+    print("Test accuracy:", model.accuracy(x_test_pca, y_test_data))
     print(
-        "Time required for computing test accuracy:",
-        float(time.time() - start),
-        "Testing dataset size:",
+        "Time to compute test accuracy:",
+        (time.time() - start),
+        "Test size:",
         len(y_test_data),
     )
-    
-    # Predict the response for test dataset
-    y_pred = model.predict(x_LDA_test)
+
+    # Predict the response for test data set
+    y_pred = model.predict(x_test_pca)
     print("Testing time:", (time.time() - start))
     
     # calculating accuracy of the classifier
@@ -216,7 +234,5 @@ def main():
     # average accuracy
     average_accuracy = np.mean(y_test_data == y_pred) * 100
     print("The average_accuracy is {0:.1f}%".format(average_accuracy))
-    
 
-if __name__ == "__main__":
-    main()
+
